@@ -1,5 +1,5 @@
-DOWNLOAD AND VISUALIZE NYISO ACTUAL LOAD AND FORECAST DATA
-=========================================================
+Downloading and Visualizing NYISO Actual Load and Forecast Data
+===============================================================
 
 This repository contains a set of Python scripts used to massively download, organize and plot. 
 
