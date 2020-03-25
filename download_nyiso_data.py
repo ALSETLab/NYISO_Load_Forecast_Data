@@ -87,10 +87,14 @@ def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", p
                 # Removing '.zip' file
                 if file.endswith(".zip"):
                     os.remove(file)
+            else:
+                continue
 
     # Print info statement when all files have been downloaded
     if print_info:
         print(f"Load forecast '.zip' files download completed up to {now.month}/{now.year}")
+
+    organizing_forecast_data_per_zone(raw_lf_data_path, processed_lf_data_path)
 
     ######################################
     ###### DOWNLOADING ACTUAL DATA #######
@@ -126,6 +130,8 @@ def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", p
                 # Removing '.zip' file
                 if file.endswith(".zip"):
                     os.remove(file)
+            else:
+                continue
 
     # ORGANIZING ACTUAL LOAD DATA PER ZONE
     organizing_actual_load_data_per_zone(raw_actual_load_path, processed_actual_load_path)
@@ -197,6 +203,90 @@ def organizing_actual_load_data_per_zone(raw_data_path, write_data_path):
                     time_values = []
                     for date in df_temp["Time Stamp"]:
                         date_aux_1 = datetime.datetime.strptime(date, '%m/%d/%Y %H:%M:%S')
+                        time_values.append(date_aux_1)
+                
+                    df_temp.drop("Time Stamp", axis = 1, inplace = True)
+                    df_temp["Time Stamp"] = time_values
+
+                    with open(save_file_path, 'wb') as f:
+                        pickle.dump(df_temp, f, pickle.HIGHEST_PROTOCOL)
+
+                    # Cleaning pandas dataframe
+                    if df_temp is not None:
+                        df_temp = None
+
+                # Cleaning pandas dataframe
+                if df_aux is not None:
+                    df_aux = None
+
+
+def organizing_forecast_data_per_zone(raw_data_path, write_data_path):
+
+    # Getting subfolders
+    year_subfolders = os.listdir(raw_data_path)
+
+    for year_subfolder in year_subfolders:
+
+        year_subfolder_path = os.path.join(raw_data_path, year_subfolder)
+        
+        # Path of the subfolder files containing the 'csv' files for each year   
+        csv_subfolders = [os.path.join(year_subfolder_path, csv_subf) for csv_subf in os.listdir(year_subfolder_path)]
+
+        for csv_subf in csv_subfolders:
+
+            # Getting a list of the '.csv' files in each csv subfolder
+            csv_files = [os.path.join(csv_subf, csv_file) for csv_file in os.listdir(csv_subf)]
+            csv_files_names = os.listdir(csv_subf)
+
+            # Clearing variables for auxiliary containers
+            df_aux = None
+            df_temp = None
+
+            for n_csv_file, csv_file in enumerate(csv_files):
+
+                # Loading '.csv' file in a Pandas dataframe
+                df_aux = pd.read_csv(csv_file)
+
+                # Getting the zones of the NYS power grid from the columns of the '.csv' files
+                zones_nys_ps = list(df_aux.columns.values)
+
+                # Removing the columns that are not a zone of the NYS grid
+                zones_nys_ps.remove("Time Stamp")
+                zones_nys_ps.remove("NYISO")
+
+                for zone in zones_nys_ps:
+
+                    # Name of the target file
+                    filename = csv_files_names[n_csv_file][:-9] + "_" + zone.upper()
+                    
+                    # Path of the target folder
+                    target_path = os.path.join(os.path.join(write_data_path, year_subfolder), zone.upper())
+
+                    # Creating target folder if it does not exist
+                    if not os.path.exists(target_path):
+                        os.makedirs(target_path)
+                
+                    save_file_path = os.path.join(target_path, filename) + ".pkl"
+                    
+                    # Skip operations if the file already exists
+                    if os.path.exists(save_file_path):
+                        continue
+
+                    # Creating a temporary Pandas dataframe
+                    df_temp = pd.DataFrame([], columns = ["Time Stamp", "Load Forecast"])
+
+                    # Getting the load data
+                    df_temp["Load Forecast"] = df_aux[zone].values
+
+                    # Filling the missing values using the next available values
+                    df_temp.fillna(method = 'ffill')
+
+                    # Convert time stamp to datetime format
+                    df_temp["Time Stamp"] = df_aux["Time Stamp"].values
+
+                    time_values = []
+                    for date in df_temp["Time Stamp"]:
+                        date_aux_1 = datetime.datetime.strptime(date, '%m/%d/%Y %H:%M')
                         time_values.append(date_aux_1)
                 
                     df_temp.drop("Time Stamp", axis = 1, inplace = True)
