@@ -4,6 +4,7 @@ import os
 import datetime
 import zipfile
 import pandas as pd
+import numpy as np
 import pickle
 
 def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", print_info = False):
@@ -129,7 +130,7 @@ def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", p
                     zip_ref.extractall(file[0:-4])
                 # Removing '.zip' file
                 if file.endswith(".zip"):
-                    os.remove(file)
+                    os.remove(file) 
             else:
                 continue
 
@@ -166,20 +167,24 @@ def organizing_actual_load_data_per_zone(raw_data_path, write_data_path):
                 # Loading '.csv' file in a Pandas dataframe
                 df_aux = pd.read_csv(csv_file)
 
-                zones_nys_ps = df_aux["Name"].unique()
+                zones_nys_ps = list(df_aux["Name"].unique())
 
+                # Writing information of each of the zones of NY grid
                 for zone in zones_nys_ps:
                     # Name of the target file
                     filename = csv_files_names[n_csv_file][:-17] + "_" + zone
                     
                     # Path of the target folder
-                    target_path = os.path.join(os.path.join(write_data_path, year_subfolder), zone)
+                    target_path_csv = os.path.join(os.path.join(os.path.join(write_data_path, year_subfolder), zone), "csv")
+                    target_path_pkl = os.path.join(os.path.join(os.path.join(write_data_path, year_subfolder), zone), "pkl")
 
                     # Creating target folder if it does not exist
-                    if not os.path.exists(target_path):
-                        os.makedirs(target_path)
+                    if not os.path.exists(target_path_csv):
+                        os.makedirs(target_path_csv)
+                    if not os.path.exists(target_path_pkl):
+                        os.makedirs(target_path_pkl)
                 
-                    save_file_path = os.path.join(target_path, filename) + ".pkl"
+                    save_file_path = os.path.join(target_path_pkl, filename) + ".pkl"
                     
                     # Skip operations if the file already exists
                     if os.path.exists(save_file_path):
@@ -211,9 +216,65 @@ def organizing_actual_load_data_per_zone(raw_data_path, write_data_path):
                     with open(save_file_path, 'wb') as f:
                         pickle.dump(df_temp, f, pickle.HIGHEST_PROTOCOL)
 
+                    # Saving dataframe as '.csv' file
+                    df_temp.to_csv(os.path.join(target_path_csv, filename) + ".csv", index = False)
+
                     # Cleaning pandas dataframe
                     if df_temp is not None:
                         df_temp = None
+
+                # Total NYISO load file
+                filename = csv_files_names[n_csv_file][:-17] + "_" + "NYISO"
+                target_path_pkl = os.path.join(os.path.join(os.path.join(write_data_path, year_subfolder), "NYISO"), "pkl")
+                target_path_csv = os.path.join(os.path.join(os.path.join(write_data_path, year_subfolder), "NYISO"), "csv")
+                
+                # Creating target folder for '.pkl' files if it does not exist yet
+                if not os.path.exists(target_path_pkl):
+                    os.makedirs(target_path_pkl)
+                # Creating target folder for '.csv' files if it does not exist yet
+                if not os.path.exists(target_path_csv):
+                    os.makedirs(target_path_csv)
+            
+                save_file_path = os.path.join(target_path_pkl, filename) + ".pkl"
+                
+                # Skip operations if the file already exists
+                if os.path.exists(save_file_path):
+                    continue
+
+                #########################################
+                ########### TOTAL LOAD IN NYS ###########
+                #########################################
+
+                # Temporary data frame for the total load
+                df_temp = pd.DataFrame([], columns = ["Time Stamp", "Load"])
+
+                # Time stamp values for the total load data frame
+                df_temp["Time Stamp"] = np.unique(df_aux["Time Stamp"].values)
+
+                # Getting total load per time stamp and adding it to the temporary data frame
+                total_load = []
+                for date in df_temp["Time Stamp"]:
+                    total_load.append(df_aux[df_aux["Time Stamp"] == date]["Integrated Load"].sum())
+                total_load = np.array(total_load)
+                df_temp["Load"] = total_load
+
+                # Converting time stamps to datatime format
+                time_values = []
+                for date in df_temp["Time Stamp"]:
+                    date_aux_1 = datetime.datetime.strptime(date, '%m/%d/%Y %H:%M:%S')
+                    time_values.append(date_aux_1)
+            
+                df_temp.drop("Time Stamp", axis = 1, inplace = True)
+                df_temp["Time Stamp"] = time_values
+
+                with open(save_file_path, 'wb') as f:
+                    pickle.dump(df_temp, f, pickle.HIGHEST_PROTOCOL)
+
+                # Saving dataframe as '.csv' file   
+                df_temp.to_csv(os.path.join(target_path_csv, filename) + ".csv", index = False)
+                
+                if df_temp is not None:
+                    df_temp = None
 
                 # Cleaning pandas dataframe
                 if df_aux is not None:
@@ -252,7 +313,6 @@ def organizing_forecast_data_per_zone(raw_data_path, write_data_path):
 
                 # Removing the columns that are not a zone of the NYS grid
                 zones_nys_ps.remove("Time Stamp")
-                zones_nys_ps.remove("NYISO")
 
                 for zone in zones_nys_ps:
 
@@ -260,13 +320,17 @@ def organizing_forecast_data_per_zone(raw_data_path, write_data_path):
                     filename = csv_files_names[n_csv_file][:-9] + "_" + zone.upper()
                     
                     # Path of the target folder
-                    target_path = os.path.join(os.path.join(write_data_path, year_subfolder), zone.upper())
+                    target_path_csv = os.path.join(os.path.join(os.path.join(write_data_path, year_subfolder), zone.upper()), "csv")
+                    target_path_pkl = os.path.join(os.path.join(os.path.join(write_data_path, year_subfolder), zone.upper()), "pkl")
 
                     # Creating target folder if it does not exist
-                    if not os.path.exists(target_path):
-                        os.makedirs(target_path)
+                    if not os.path.exists(target_path_csv):
+                        os.makedirs(target_path_csv)
+
+                    if not os.path.exists(target_path_pkl):
+                        os.makedirs(target_path_pkl)
                 
-                    save_file_path = os.path.join(target_path, filename) + ".pkl"
+                    save_file_path = os.path.join(target_path_pkl, filename) + ".pkl"
                     
                     # Skip operations if the file already exists
                     if os.path.exists(save_file_path):
@@ -282,7 +346,7 @@ def organizing_forecast_data_per_zone(raw_data_path, write_data_path):
                     df_temp.fillna(method = 'ffill')
 
                     # Convert time stamp to datetime format
-                    df_temp["Time Stamp"] = df_aux["Time Stamp"].values
+                    df_temp["Time Stamp"] = np.unique(df_aux["Time Stamp"])
 
                     time_values = []
                     for date in df_temp["Time Stamp"]:
@@ -294,6 +358,8 @@ def organizing_forecast_data_per_zone(raw_data_path, write_data_path):
 
                     with open(save_file_path, 'wb') as f:
                         pickle.dump(df_temp, f, pickle.HIGHEST_PROTOCOL)
+
+                    df_temp.to_csv(os.path.join(target_path_csv, filename) + ".csv", index = False)
 
                     # Cleaning pandas dataframe
                     if df_temp is not None:
