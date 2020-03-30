@@ -5,13 +5,17 @@ import datetime
 import platform
 import copy
 
-def plot_weekly_behavior(zones, data_path):
+def plot_weekly_behavior(zones, data_path, month = None):
 
 	# Plotting data on a weekly basis
 	now = datetime.datetime.now()
 
+	if month == None:
+		month = now.month
+
 	# Number of weeks in the current month
 	n_weeks = list(range(1, int((now.day-1)/8) + 1))
+	n_weeks.sort()
 
 	# Load/forecast data containers
 	load_data = dict.fromkeys(zones)
@@ -33,14 +37,14 @@ def plot_weekly_behavior(zones, data_path):
 	        if n_week > max(n_weeks):
 	            break
 	        
-	        date = f"{now.month:02d}/{day:02d}/2020"
+	        date = f"{month:02d}/{day:02d}/2020"
 	        
 	        # Getting load and forecast data
 	        time_stamp, load, forecast = visualize_load_forecast(date, zone, data_path = "00_NYISO_Data", show_plot = False)
 	        
 	        # Organizing data per week
 	        if start_week:
-	            start_date = f"{now.month:02d}/{day:02d}"
+	            start_date = f"{month:02d}/{day:02d}"
 	            load_data[zone][n_week] = load
 	            forecast_data[zone][n_week] = forecast
 	            time_stamp_data[zone][n_week] = time_stamp

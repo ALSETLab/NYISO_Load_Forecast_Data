@@ -346,7 +346,7 @@ def organizing_forecast_data_per_zone(raw_data_path, write_data_path):
                     df_temp.fillna(method = 'ffill')
 
                     # Convert time stamp to datetime format
-                    df_temp["Time Stamp"] = np.unique(df_aux["Time Stamp"])
+                    df_temp["Time Stamp"] = df_aux["Time Stamp"].values
 
                     time_values = []
                     for date in df_temp["Time Stamp"]:
