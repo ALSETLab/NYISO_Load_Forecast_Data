@@ -4,8 +4,44 @@ import numpy as np
 import datetime
 import platform
 import copy
+from get_start_end_day import*
 
-def get_weekly_behavior(zones, data_path, month = None, plot_graph = True):
+def get_weekly_behavior_per_zone(date, zone, data_path, show_plot = False):
+
+	# Getting start and end day of the week from the given date
+	start_day, end_day, _ = get_start_end_day(date)
+
+	date_span = end_day - start_day
+
+	print(date_span)
+
+	load_week = []
+	forecast_week = []
+	worst_forecast_week = []
+	time_stamp_week = []
+
+	# Looping through the given week
+	for i in range(date_span.days + 1):
+		
+		current_date = start_day + datetime.timedelta(days = i)
+
+		date = f"{current_date.month:02d}/{current_date.day:02d}/{current_date.year}"
+
+		time_stamp_day, load_day, forecast_day, worst_forecast_day = visualize_load_forecast(date, zone, data_path, show_plot)
+
+		load_week.extend(load_day)
+		forecast_week.extend(forecast_day)
+		worst_forecast_week.extend(forecast_week)
+		time_stamp_week.extend(time_stamp_day)
+
+	plt.plot(load_week)
+	plt.plot(forecast_week)
+	plt.plot(worst_forecast_week)
+
+	return time_stamp_week, load_week, forecast_week, worst_forecast_week
+
+
+def get_weekly_behavior_per_month(zones, data_path, month = None, plot_graph = True):
 
 	# Plotting data on a weekly basis
 	now = datetime.datetime.now()

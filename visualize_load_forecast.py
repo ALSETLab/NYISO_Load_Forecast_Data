@@ -15,17 +15,22 @@ def visualize_load_forecast(date, region, data_path = os.getcwd(), show_plot = T
 	month = given_date.month
 	day = given_date.day
 
+	worst_forecast_date = given_date + datetime.timedelta(days = -5)
+
 	# Getting path to processed data folders
 	processed_actual_load_data_path = os.path.join(os.path.join(data_path, "Actual_Load"), "01_Processed_Data")
 	processed_forecast_load_data_path = os.path.join(os.path.join(data_path, "Load_Forecast"), "01_Processed_Data")
 
 	# Paths to commanded files
-	filename = f"{year}{month:02d}{day:02d}_{region}.pkl" # Common for both
+	filename = f"{year}{month:02d}{day:02d}_{region}.pkl" # Common for the best forecast and the actual load
+	filename_worst = f"{worst_forecast_date.year}{worst_forecast_date.month:02d}{worst_forecast_date.day:02d}_{region}.pkl" 
 
 	actual_load_data_file = os.path.join(os.path.join(os.path.join(os.path.join(processed_actual_load_data_path, 
 		str(year)), region), "pkl"), filename)
 	forecast_load_data_file = os.path.join(os.path.join(os.path.join(os.path.join(processed_forecast_load_data_path, 
 		str(year)), region), "pkl"), filename)
+	worst_forecast_load_data_file = os.path.join(os.path.join(os.path.join(os.path.join(processed_forecast_load_data_path,
+		str(year)), region), "pkl"), filename_worst)
 
 	infile = open(actual_load_data_file, 'rb')
 	actual_load = pickle.load(infile)
@@ -33,8 +38,14 @@ def visualize_load_forecast(date, region, data_path = os.getcwd(), show_plot = T
 	infile = open(forecast_load_data_file, 'rb')
 	forecast_load = pickle.load(infile)
 
+	infile = open(worst_forecast_load_data_file, 'rb')
+	worst_forecast_load = pickle.load(infile)
+		
+	# Filtering the oldest forecast to the given date
+	worst_forecast_filtered = worst_forecast_load[worst_forecast_load["Time Stamp"] >= given_date]
+	
 	# Increasing given date by one day to filter the time stamp of the forecast data
-	given_date += datetime.timedelta(days=1) 
+	given_date += datetime.timedelta(days = 1) 
 
 	# Filtering the forecasted load up to the given date
 	forecast_load_filtered = forecast_load[forecast_load["Time Stamp"] < given_date]
@@ -60,7 +71,9 @@ def visualize_load_forecast(date, region, data_path = os.getcwd(), show_plot = T
 			label = "Actual Load", color = 'indigo', marker = 'o', linestyle = '--')
 		axes[0].legend(prop = {'size' : 16, 'family' : font_plot})
 		axes[0].plot(hour_minute, forecast_load_filtered["Load Forecast"].values, 
-			label = "Load Forecast", color = 'salmon', marker = 'o', linestyle = '--')
+			label = "Best Load Forecast", color = 'lightsteelblue', marker = 'o', linestyle = ':')
+		axes[0].plot(hour_minute, worst_forecast_filtered["Load Forecast"].values,
+			label = "Worst Load Forecast", color = 'lightpink', marker = 'o', linestyle = ':')
 		axes[0].legend(prop = {'size' : 16, 'family' : font_plot})
 		axes[0].set_ylabel("MW", fontname = font_plot, fontsize = 18)
 		axes[0].set_title("Actual Load and Forecast", fontname = font_plot, fontsize = 20)
@@ -78,7 +91,9 @@ def visualize_load_forecast(date, region, data_path = os.getcwd(), show_plot = T
 			tick.label.set_fontname(font_plot)
 
 		axes[1].plot(hour_minute, np.abs(actual_load["Load"].values - forecast_load_filtered["Load Forecast"].values), 
-			label = "Forecast Absolute Error", color = 'darkblue', marker = 'o', linestyle = '--')
+			label = "Forecast Absolute Error (Best Forecast)", color = 'darkblue', marker = 'o', linestyle = '--')
+		axes[1].plot(hour_minute, np.abs(actual_load["Load"].values - worst_forecast_filtered["Load Forecast"].values),
+			label = "Forecast Absolute Error (Worst Forecast)", color = 'lightskyblue', marker = 'o', linestyle = '--')
 		axes[1].legend(prop = {'size' : 16, 'family' : font_plot})
 		axes[1].set_ylabel("MW", fontname = font_plot, fontsize = 18)
 		axes[1].set_title("Forecast Error", fontname = font_plot, fontsize = 20)
@@ -107,4 +122,4 @@ def visualize_load_forecast(date, region, data_path = os.getcwd(), show_plot = T
 
 		fig.savefig(os.path.join(save_path, export_name), dpi = 300)
 
-	return hour_minute_day, list(actual_load["Load"].values), list(forecast_load_filtered["Load Forecast"].values)
+	return hour_minute_day, list(actual_load["Load"].values), list(forecast_load_filtered["Load Forecast"].values), list(worst_forecast_filtered["Load Forecast"].values)
