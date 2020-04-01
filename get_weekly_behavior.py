@@ -7,156 +7,94 @@ import copy
 import calendar
 from get_start_end_day import*
 
-def get_weekly_behavior_per_zone(date, zone, data_path, show_plot = False):
+def get_weekly_behavior(date, zone, data_path, show_plot = False):
 
-	# Getting start and end day of the week from the given date
-	start_day, end_day, _ = get_start_end_day(date)
+    # Getting start and end day of the week from the given date
+    start_day, end_day, _ = get_start_end_day(date)
+    
+    date_span = end_day - start_day
+    
+    load_week = []
+    forecast_week = []
+    worst_forecast_week = []
+    time_stamp_week = []
+    
+    for i in range(date_span.days + 1):
+    
+        current_date = start_day + datetime.timedelta(days = i)
+        
+        date = f"{current_date.month:02d}/{current_date.day:02d}/{current_date.year}"
+        
+        time_stamp_day, load_day, forecast_day, worst_forecast_day = visualize_load_forecast(date, zone, data_path, False)
+        
+        time_stamp_week.extend(time_stamp_day)
+        load_week.extend(load_day)
+        forecast_week.extend(forecast_day)
+        worst_forecast_week.extend(worst_forecast_day)
+    
+    if show_plot:
+        
+        # Selecting font for the plots
+        if platform.system() == 'Windows':
+            font_plot = "Times New Roman"
+        else:
+            font_plot = "liberation sans"
+            
+        color_load = 'indigo'
+        color_forecast = 'lightsteelblue'
+        color_worst_forecast = 'lightpink'
+        color_error = 'darkblue'
+        color_worst_error = 'lightskyblue'
+            
+        fig, axes = plt.subplots(figsize = (16,8), nrows = 1, ncols = 2)
+        fig.suptitle(f"Weekly Behavior of Load and Forecast ({zone})", fontname = font_plot, fontsize = 22)
+        
+        plot_label = f"{start_day.month:02d}/{start_day.day:02d}/{start_day.year} - {end_day.month:02d}/{end_day.day:02d}/{end_day.year}"
+        plot_label_save = f"{start_day.month:02d}{start_day.day:02d}{start_day.year}{end_day.month:02d}{end_day.day:02d}{end_day.year}"
+        legend_label = f"({start_day.month:02d}/{start_day.day:02d} - {end_day.month:02d}/{end_day.day:02d})"
+        
+        for tick in axes[0].xaxis.get_major_ticks():
+            tick.label.set_fontsize(0)
+            tick.label.set_fontname(font_plot)
 
-	date_span = end_day - start_day
+        for tick in axes[0].yaxis.get_major_ticks():
+            tick.label.set_fontsize(14)
+            tick.label.set_fontname(font_plot)
+        
+        axes[0].plot(load_week, color = color_load, label = 'Actual Load ' + legend_label)
+        axes[0].plot(forecast_week, color = color_forecast, linestyle = '--', label = 'Best Forecast ' + legend_label)
+        axes[0].plot(worst_forecast_week, color = color_worst_forecast, linestyle = '--', label = 'Worst Forecast ' + legend_label)
+        axes[0].legend(loc = 'lower right', prop = {'size' : 12, 'family' : font_plot})
+        
+        axes[0].set_ylabel("MW", fontname = font_plot, fontsize = 18)
+        axes[0].set_title(f"Actual Load and Forecast ({plot_label})", fontname = font_plot, fontsize = 20)
+        
+        axes[1].plot(np.abs(np.array(load_week) - np.array(forecast_week)), 
+            label = 'Best Forecast Error ' + legend_label, color = color_error)
+        axes[1].plot(np.abs(np.array(load_week) - np.array(worst_forecast_week)), 
+            label = 'Worst Forecast Error ' + legend_label, color = color_worst_error)
+        axes[1].legend(loc = 'lower right', prop = {'size' : 12, 'family' : font_plot})
+        
+        axes[1].set_ylabel("MW", fontname = font_plot, fontsize = 18)
+        axes[1].set_title(f"Forecast Error ({plot_label})", fontname = font_plot, fontsize = 20)
+        
+        for tick in axes[1].xaxis.get_major_ticks():
+            tick.label.set_fontsize(0)
+            tick.label.set_fontname(font_plot)
 
-	load_week = []
-	forecast_week = []
-	worst_forecast_week = []
-	time_stamp_week = []
+        for tick in axes[1].yaxis.get_major_ticks():
+            tick.label.set_fontsize(14)
+            tick.label.set_fontname(font_plot)
+        
+        fig.tight_layout()
+        fig.subplots_adjust(top = 0.90)
 
-	# Looping through the given week
-	for i in range(date_span.days + 1):
-		
-		current_date = start_day + datetime.timedelta(days = i)
+        # Saving figure
+        save_path = os.path.join(data_path, "Figs")
+        export_name = f"{zone}_{plot_label_save}_weekly.png"
+        fig.savefig(os.path.join(save_path, export_name), dpi = 300)
 
-		date = f"{current_date.month:02d}/{current_date.day:02d}/{current_date.year}"
-
-		time_stamp_day, load_day, forecast_day, worst_forecast_day = visualize_load_forecast(date, zone, data_path, False)
-
-		load_week.extend(load_day)
-		forecast_week.extend(forecast_day)
-		worst_forecast_week.extend(worst_forecast_day)
-		time_stamp_week.extend(time_stamp_day)
-
-	return time_stamp_week, load_week, forecast_week, worst_forecast_week
-
-
-def get_weekly_behavior_per_month(zones, data_path, month = None, plot_graph = True):
-
-	# Plotting data on a weekly basis
-	now = datetime.datetime.now()
-
-	if month == None:
-		month = now.month
-
-	# Number of weeks in the current month
-	n_weeks = list(range(1, int((now.day-1)/8) + 1))
-	n_weeks.sort()
-
-	# Load/forecast data containers
-	load_data = dict.fromkeys(zones)
-	for zone in load_data:
-	    load_data[zone] = dict.fromkeys(n_weeks)
-
-	forecast_data = copy.deepcopy(load_data)
-	time_stamp_data = copy.deepcopy(load_data)
-
-	dates = set()
-
-	for zone in zones:
-	    n_week = 1
-	    start_week = True
-	    
-	    for day in range(1, now.day):
-	        
-	        # Validation to limitate the number of weeks
-	        if n_week > max(n_weeks):
-	            break
-	        
-	        date = f"{month:02d}/{day:02d}/2020"
-	        
-	        # Getting load and forecast data
-	        time_stamp, load, forecast = visualize_load_forecast(date, zone, data_path = "00_NYISO_Data", show_plot = False)
-	        
-	        # Organizing data per week
-	        if start_week:
-	            start_date = f"{month:02d}/{day:02d}"
-	            load_data[zone][n_week] = load
-	            forecast_data[zone][n_week] = forecast
-	            time_stamp_data[zone][n_week] = time_stamp
-	            start_week = False
-	        else:
-	            load_data[zone][n_week].extend(load)
-	            forecast_data[zone][n_week].extend(forecast) 
-	            time_stamp_data[zone][n_week].extend(time_stamp)
-	        if day % 8 == 0:            
-	            dates.add(start_date + f"-{now.month:02d}/{day:02d}")
-	            n_week += 1
-	            start_week = True
-	            
-	        del time_stamp, load, forecast
-	            
-	dates = list(dates)
-
-	if plot_graph:
-	            
-		if platform.system() == 'Windows':
-		    font_plot = "Times New Roman"
-		else:
-		    font_plot = "liberation sans"
-		    
-		for zone in zones:
-		    fig, axes = plt.subplots(figsize = (16,16), nrows = 3, ncols = 2)            
-		    fig.suptitle(f"Weekly Behavior of Load and Forecast ({zone})", fontname = font_plot, fontsize = 22)
-
-		    color_load = 'indigo'
-		    color_forecast = 'salmon'
-		    color_error = 'darkblue'
-
-		    for week in load_data[zone]:
-		        axes[week-1][0].plot(load_data[zone][week], 
-		        label = f"Actual Load ({dates[week-1]})", color = color_load, linestyle = '-')
-		        axes[week-1][0].plot(forecast_data[zone][week], 
-		        label = f"Load Forecast ({dates[week-1]})", color = color_forecast, linestyle = '-')
-		        axes[week-1][0].legend(loc = 'lower left', prop = {'size' : 12, 'family' : font_plot})
-
-		        for tick in axes[week-1][0].get_xmajorticklabels():
-		            tick.set_rotation(90)
-
-		        for tick in axes[week-1][0].xaxis.get_major_ticks():
-		            tick.label.set_fontsize(0)
-		            tick.label.set_fontname(font_plot)
-
-		        for tick in axes[week-1][0].yaxis.get_major_ticks():
-		            tick.label.set_fontsize(14)
-		            tick.label.set_fontname(font_plot)
-
-		        axes[week-1][0].set_ylabel("MW", fontname = font_plot, fontsize = 18)
-		        axes[week-1][0].set_title("Actual Load and Forecast", fontname = font_plot, fontsize = 20)
-
-		        axes[week-1][1].plot(np.abs(np.array(load_data[zone][week])-np.array(forecast_data[zone][week])), 
-		        label = f"Forecast Error ({dates[week-1]})", color = color_error, linestyle = '-')
-		        axes[week-1][1].legend(loc = 'lower left', prop = {'size' : 12, 'family' : font_plot})
-
-		        for tick in axes[week-1][1].get_xmajorticklabels():
-		            tick.set_rotation(90)
-
-		        for tick in axes[week-1][1].xaxis.get_major_ticks():
-		            tick.label.set_fontsize(0)
-		            tick.label.set_fontname(font_plot)
-
-		        for tick in axes[week-1][1].yaxis.get_major_ticks():
-		            tick.label.set_fontsize(14)
-		            tick.label.set_fontname(font_plot)    
-
-		        axes[week-1][1].set_ylabel("MW", fontname = font_plot, fontsize = 18)
-		        axes[week-1][1].set_title("Forecast Error", fontname = font_plot, fontsize = 20)
-
-		    fig.tight_layout()
-		    fig.subplots_adjust(top = 0.93)
-
-		    # Saving figure
-		    save_path = os.path.join(data_path, "Figs")
-		    export_name = f"{zone}_weekly.png"
-		    fig.savefig(os.path.join(save_path, export_name), dpi = 300)
-		    
-		    # Clearing figure and axes
-		    fig, axes = None, None
-
-	return load_data, forecast_data, time_stamp_data
-
+        # Clearing figure and axes
+        fig, axes = None, None
+    
+    return time_stamp_week, load_week, forecast_week, worst_forecast_week
