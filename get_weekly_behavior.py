@@ -4,6 +4,7 @@ import numpy as np
 import datetime
 import platform
 import copy
+import calendar
 from get_start_end_day import*
 
 def get_weekly_behavior_per_zone(date, zone, data_path, show_plot = False):
@@ -12,8 +13,6 @@ def get_weekly_behavior_per_zone(date, zone, data_path, show_plot = False):
 	start_day, end_day, _ = get_start_end_day(date)
 
 	date_span = end_day - start_day
-
-	print(date_span)
 
 	load_week = []
 	forecast_week = []
@@ -27,16 +26,12 @@ def get_weekly_behavior_per_zone(date, zone, data_path, show_plot = False):
 
 		date = f"{current_date.month:02d}/{current_date.day:02d}/{current_date.year}"
 
-		time_stamp_day, load_day, forecast_day, worst_forecast_day = visualize_load_forecast(date, zone, data_path, show_plot)
+		time_stamp_day, load_day, forecast_day, worst_forecast_day = visualize_load_forecast(date, zone, data_path, False)
 
 		load_week.extend(load_day)
 		forecast_week.extend(forecast_day)
-		worst_forecast_week.extend(forecast_week)
+		worst_forecast_week.extend(worst_forecast_day)
 		time_stamp_week.extend(time_stamp_day)
-
-	plt.plot(load_week)
-	plt.plot(forecast_week)
-	plt.plot(worst_forecast_week)
 
 	return time_stamp_week, load_week, forecast_week, worst_forecast_week
 
