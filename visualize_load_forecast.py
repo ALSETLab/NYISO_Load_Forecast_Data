@@ -30,7 +30,7 @@ def visualize_load_forecast(date, zone, data_path = os.getcwd(), show_plot = Tru
     
     LAST MODIFICATION DATE:
     
-    04/07/2020 by SADR: corrected an error in the path to the worst forecast (pointing to the wrong year when a new year occurs)
+    04/08/2020 by SADR: changed the labels for the absolute forecast error plots
     '''
 	
     given_date = datetime.datetime.strptime(date, '%m/%d/%Y')
@@ -117,9 +117,9 @@ def visualize_load_forecast(date, zone, data_path = os.getcwd(), show_plot = Tru
             tick.label.set_fontname(font_plot)
 
         axes[1].plot(hour_minute, np.abs(actual_load["Load"].values - forecast_load_filtered["Load Forecast"].values), 
-            label = "Forecast Absolute Error (Best Forecast)", color = 'darkblue', marker = 'o', linestyle = '--')
+            label = "Best Forecast Error", color = 'darkblue', marker = 'o', linestyle = '--')
         axes[1].plot(hour_minute, np.abs(actual_load["Load"].values - worst_forecast_filtered["Load Forecast"].values),
-            label = "Forecast Absolute Error (Worst Forecast)", color = 'lightskyblue', marker = 'o', linestyle = '--')
+            label = "Worst Forecast Error", color = 'lightskyblue', marker = 'o', linestyle = '--')
         axes[1].legend(prop = {'size' : 16, 'family' : font_plot})
         axes[1].set_ylabel("MW", fontname = font_plot, fontsize = 18)
         axes[1].set_title("Forecast Error", fontname = font_plot, fontsize = 20)
