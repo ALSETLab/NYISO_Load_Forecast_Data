@@ -1,7 +1,7 @@
 Downloading and Visualizing NYISO Actual Load and Forecast Data
 ===============================================================
 
-This repository contains a set of Python scripts used to massively download, organize and plot. 
+This repository contains a set of Python scripts used to massively download, organize and plot load and load forecast data from NYISO. **For simplifying the distribution of the code, the repository does not include data. It is recommended to store it in a subfolder called `00_NYISO_Data`.**
 
 Examples of the use of the scripts are found in the Jupyter Notebook `01_Examples.ipynb`. For quick reference, the regions of the New York State grid are:
 
