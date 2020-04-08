@@ -9,6 +9,27 @@ import pickle
 
 def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", print_info = False):
 
+    '''
+    DOWNLOAD_NYISO_DATA
+    
+    This function downloads all the '.csv' files of load forecast and actual load (hourly time-stamp) from the NYISO website from a given start year up to present time. It can be used to update existing files (i.e., does not overwrite pre-existing data). It also organizes the files in Pandas dataframes stored as pickle files (`.pkl`) by region of the New York State grid.
+    
+    INPUTS:
+    - start_year: year from which the data starts being downloaded. It defaults to 1999.
+    - destination_folder: path of the target folder to download the files (relative to the script path). It defaults to "00_Raw_Data". If the folder does not exist,
+    the script creates it.
+    - print_info: if 'True', prints verbose statements to show progress of the download and the data organization processes.
+    
+    OUTPUTS: 
+    
+    None.
+    
+    LAST MODIFICATION DATE:
+    
+    04/06/2020 by SADR
+    
+    '''
+
     ######################################
     ###### CREATING DATA STRUCTURE #######
     ######################################
@@ -93,9 +114,12 @@ def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", p
 
     # Print info statement when all files have been downloaded
     if print_info:
-        print(f"Load forecast '.zip' files download completed up to {now.month}/{now.year}")
+        print(f"Load forecast '.zip' files downloading completed up to {now.month}/{now.day-1}/{now.year}")
 
     organizing_forecast_data_per_zone(raw_lf_data_path, processed_lf_data_path)
+    
+    if print_info:
+        print(f"Forecast load '.zip' files organization completed up to {now.month}/{now.day-1}/{now.year}")
 
     ######################################
     ###### DOWNLOADING ACTUAL DATA #######
@@ -134,8 +158,15 @@ def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", p
             else:
                 continue
 
+    # Print info statement when all files have been downloaded
+    if print_info:
+        print(f"Actual load '.zip' files downloading completed up to {now.month}/{now.day-1}/{now.year}")
+    
     # ORGANIZING ACTUAL LOAD DATA PER ZONE
     organizing_actual_load_data_per_zone(raw_actual_load_path, processed_actual_load_path)
+    
+    if print_info:
+        print(f"Actual load '.zip' files organization completed up to {now.month}/{now.day-1}/{now.year}")
 
 def organizing_actual_load_data_per_zone(raw_data_path, write_data_path):
 
