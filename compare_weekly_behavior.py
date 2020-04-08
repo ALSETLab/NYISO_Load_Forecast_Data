@@ -36,6 +36,19 @@ def compare_weekly_behavior(date, comparison_years, zone, data_path):
     - output_dict: nested dictionary. The first key layer corresponds to the years being compared. The second is a key
     to the 'Actual_Load', 'Best_Forecast' and 'Worst_Forecast'
     
+    output_dict
+        'comparison_year'
+            'monthly'
+                'Time_Stamp'
+                'Actual_Load'
+                'Best_Forecast'
+                'Worst_Forecast'
+            'weekly'
+                'Time_Stamp'
+                'Actual_Load'
+                'Best_Forecast'
+                'Worst_Forecast'
+    
     LAST MODIFICATION DATE: 
     
     04/06/2020 by SADR

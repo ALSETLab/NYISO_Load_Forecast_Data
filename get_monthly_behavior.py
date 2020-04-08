@@ -23,16 +23,36 @@ def get_monthly_behavior(date, zone, data_path, show_plot = False):
     '''
     GET_MONTHLY_BEHAVIOR
     
+    This function returns the monthly information about load and load forecast for all weeks in a given month. A month is assumed to start the week at which the first day of the month takes place (i.e., if the first day 
+    of a month is a Tuesday, then that week is counted as the first week of that month). It returns a dictionary having the information of the month in a concatenated array and the weekly information. 
+    
     INPUTS:
     
     - date: string in format `month:year` (e.g., March 2020 is passed as `03/2020`)
-    - zone:
-    - data_path:
-    - show_plot: 
+    - zone: string with the ID of a zone of the NY state power grid. See the repository documentation for more information.
+    - data_path: relative path to the NYISO data folder
+    - show_plot: boolean to show plot of monthly behavior of load and load forecast
     
     OUTPUTS:
     
+    - output_dict: nested dictionary containing both the weekly and the monthly information of the requested region. It consists
+    of two dictionary layers.
+    
+    output_dict
+        'monthly'
+            'Time_Stamp'
+            'Actual_Load'
+            'Best_Forecast'
+            'Worst_Forecast'
+        'weekly'
+            'Time_Stamp'
+            'Actual_Load'
+            'Best_Forecast'
+            'Worst_Forecast'
+                    
     LAST MODIFICATION DATE:
+    
+    04/06/2020 by SADR
     
     '''
     
@@ -190,11 +210,3 @@ def get_monthly_behavior(date, zone, data_path, show_plot = False):
                     'Worst_Forecast' : worst_forecast_weekly_info}}
         
     return output_dict
-    
-    
-    
-    
-    
-    
-    
-    
