@@ -187,7 +187,7 @@ def get_monthly_behavior(date, zone, data_path, show_plot = False):
         ax5.set_ylabel("MW", fontname = font_plot, fontsize = 16)
         ax5.legend(loc = 'upper right', prop = {'size' : 14, 'family' : font_plot})
         ax5.set_title(f"Worst Forecast Error Behavior in {date} ({zone})", fontname = font_plot, fontsize = 20)
-        format_ticks(ax4, font_plot)
+        format_ticks(ax5, font_plot)
         
         # Title of the figure
         fig.suptitle(f"Monthly Behavior {date} ({zone})", fontname = font_plot, fontsize = 22)
