@@ -6,6 +6,7 @@ import zipfile
 import pandas as pd
 import numpy as np
 import pickle
+import shutil
 
 def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", print_info = False):
 
@@ -31,7 +32,7 @@ def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", p
     '''
 
     ######################################
-    ###### CREATING DATA STRUCTURE #######
+    #### CREATING FOLDER STRUCTURE #######
     ######################################
 
     # Creating destination folder if it does not exist yet
@@ -88,7 +89,7 @@ def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", p
 
         for month in range(1, 13):
 
-            # Guaranteeing that the script downloads the data as given from NYISO records
+            # Guaranteeing that the script downloads data as available from NYISO records
             if year == 2001 and month < 6:
                 continue
 
@@ -100,26 +101,40 @@ def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", p
             url = f"http://mis.nyiso.com/public/csv/isolf/{filename}"
             file = os.path.join(download_folder, filename)
 
-            # Skipping already downloaded files
-            if not os.path.exists(file):
+            # Skipping already downloaded files and just updating new ones
+            if not os.path.exists(file[0:-4]):
                 urllib.request.urlretrieve(url, file)
                 # Unzipping files
                 with zipfile.ZipFile(file, 'r') as zip_ref:
                     zip_ref.extractall(file[0:-4])
                 # Removing '.zip' file
                 if file.endswith(".zip"):
-                    os.remove(file)
+                    os.remove(file) 
             else:
-                continue
+                # Updating files
+                if year == now.year and month == now.month:
+                    # Removing folder
+                    #os.rmdir(file[0:-4])
+                    shutil.rmtree(file[0:-4])
+                    # Downloading most recent files
+                    urllib.request.urlretrieve(url, file)
+                    # Unzipping files
+                    with zipfile.ZipFile(file, 'r') as zip_ref:
+                        zip_ref.extractall(file[0:-4])
+                    # Removing '.zip' file
+                    if file.endswith(".zip"):
+                        os.remove(file)                    
+                else:
+                    continue       
 
     # Print info statement when all files have been downloaded
     if print_info:
-        print(f"Load forecast '.zip' files downloading completed up to {now.month}/{now.day-1}/{now.year}")
+        print(f"Load forecast '.zip' file download completed up to {now.month}/{now.day-1}/{now.year}")
 
     organizing_forecast_data_per_zone(raw_lf_data_path, processed_lf_data_path)
     
     if print_info:
-        print(f"Forecast load '.zip' files organization completed up to {now.month}/{now.day-1}/{now.year}")
+        print(f"Forecast load '.zip' file organization completed up to {now.month}/{now.day-1}/{now.year}")
 
     ######################################
     ###### DOWNLOADING ACTUAL DATA #######
@@ -146,8 +161,8 @@ def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", p
             url = f"http://mis.nyiso.com/public/csv/palIntegrated/{filename}"
             file = os.path.join(download_folder, filename)
             
-            # Skipping already downloaded files
-            if not os.path.exists(file):
+            # Skipping already downloaded files and just updating new ones
+            if not os.path.exists(file[0:-4]):
                 urllib.request.urlretrieve(url, file)
                 # Unzipping files
                 with zipfile.ZipFile(file, 'r') as zip_ref:
@@ -156,17 +171,30 @@ def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", p
                 if file.endswith(".zip"):
                     os.remove(file) 
             else:
-                continue
-
+                # Updating files
+                if year == now.year and month == now.month:
+                    # Removing folder
+                    shutil.rmtree(file[0:-4])
+                    # Downloading most recent files
+                    urllib.request.urlretrieve(url, file)
+                    # Unzipping files
+                    with zipfile.ZipFile(file, 'r') as zip_ref:
+                        zip_ref.extractall(file[0:-4])
+                    # Removing '.zip' file
+                    if file.endswith(".zip"):
+                        os.remove(file)                    
+                else:
+                    continue          
+                
     # Print info statement when all files have been downloaded
     if print_info:
-        print(f"Actual load '.zip' files downloading completed up to {now.month}/{now.day-1}/{now.year}")
+        print(f"Actual load '.zip' file download completed up to {now.month}/{now.day-1}/{now.year}")
     
     # ORGANIZING ACTUAL LOAD DATA PER ZONE
     organizing_actual_load_data_per_zone(raw_actual_load_path, processed_actual_load_path)
     
     if print_info:
-        print(f"Actual load '.zip' files organization completed up to {now.month}/{now.day-1}/{now.year}")
+        print(f"Actual load '.zip' file organization completed up to {now.month}/{now.day-1}/{now.year}")
 
 def organizing_actual_load_data_per_zone(raw_data_path, write_data_path):
 
