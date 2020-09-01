@@ -1,4 +1,4 @@
-from get_monthly_behavior import*
+from .get_monthly_behavior import *
 
 def format_ticks(axis, font_plot):
     for tick in axis.xaxis.get_major_ticks():

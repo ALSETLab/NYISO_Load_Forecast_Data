@@ -1,7 +1,8 @@
 import datetime
 import calendar
-from get_start_end_day import*
-from get_weekly_behavior import*
+from .get_start_end_day import *
+from .get_weekly_behavior import *
+
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 from cycler import cycler

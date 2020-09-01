@@ -5,8 +5,9 @@ import datetime
 import platform
 import copy
 import calendar
-from get_start_end_day import*
-from visualize_load_forecast import*
+
+from .get_start_end_day import *
+from .visualize_load_forecast import *
 
 def get_weekly_behavior(date, zone, data_path, show_plot = False):
     '''
