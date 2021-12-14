@@ -12,23 +12,22 @@ def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", p
 
     '''
     DOWNLOAD_NYISO_DATA
-    
+
+    DESCRIPTION
     This function downloads all the '.csv' files of load forecast and actual load (hourly time-stamp) from the NYISO website from a given start year up to present time. It can be used to update existing files (i.e., does not overwrite pre-existing data). It also organizes the files in Pandas dataframes stored as pickle files (`.pkl`) by region of the New York State grid.
-    
+
     INPUTS:
-    - start_year: year from which the data starts being downloaded. It defaults to 1999.
-    - destination_folder: path of the target folder to download the files (relative to the script path). It defaults to "00_Raw_Data". If the folder does not exist,
+    - `start_year`: year from which the data starts being downloaded. It defaults to 1999.
+    - `destination_folder`: path of the target folder to download the files (relative to the script path). It defaults to "00_Raw_Data". If the folder does not exist,
     the script creates it.
-    - print_info: if 'True', prints verbose statements to show progress of the download and the data organization processes.
-    
-    OUTPUTS: 
-    
-    None.
-    
+    - `print_info`: if 'True', prints verbose statements to show progress of the download and the data organization processes.
+
+    OUTPUTS:
+    None
+
     LAST MODIFICATION DATE:
-    
     04/06/2020 by SADR
-    
+
     '''
 
     ######################################
@@ -38,7 +37,7 @@ def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", p
     # Creating destination folder if it does not exist yet
     if not os.path.exists(destination_folder):
         os.makedirs(destination_folder)
-    
+
     # Creating data organization structure inside destination folder
     load_forecast_path = os.path.join(destination_folder, "Load_Forecast")
     actual_load_path = os.path.join(destination_folder, "Actual_Load")
@@ -109,7 +108,7 @@ def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", p
                     zip_ref.extractall(file[0:-4])
                 # Removing '.zip' file
                 if file.endswith(".zip"):
-                    os.remove(file) 
+                    os.remove(file)
             else:
                 # Updating files
                 if year == now.year and month == now.month:
@@ -123,16 +122,16 @@ def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", p
                         zip_ref.extractall(file[0:-4])
                     # Removing '.zip' file
                     if file.endswith(".zip"):
-                        os.remove(file)                    
+                        os.remove(file)
                 else:
-                    continue       
+                    continue
 
     # Print info statement when all files have been downloaded
     if print_info:
         print(f"Load forecast '.zip' file download completed up to {now.month}/{now.day-1}/{now.year}")
 
     organizing_forecast_data_per_zone(raw_lf_data_path, processed_lf_data_path)
-    
+
     if print_info:
         print(f"Forecast load '.zip' file organization completed up to {now.month}/{now.day-1}/{now.year}")
 
@@ -150,7 +149,7 @@ def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", p
             os.makedirs(download_folder)
 
         for month in range(1, 13):
-            
+
             if year == 2001 and month < 6:
                 continue
 
@@ -160,7 +159,7 @@ def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", p
             filename = f"{year}{month:02d}01palIntegrated_csv.zip"
             url = f"http://mis.nyiso.com/public/csv/palIntegrated/{filename}"
             file = os.path.join(download_folder, filename)
-            
+
             # Skipping already downloaded files and just updating new ones
             if not os.path.exists(file[0:-4]):
                 urllib.request.urlretrieve(url, file)
@@ -169,7 +168,7 @@ def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", p
                     zip_ref.extractall(file[0:-4])
                 # Removing '.zip' file
                 if file.endswith(".zip"):
-                    os.remove(file) 
+                    os.remove(file)
             else:
                 # Updating files
                 if year == now.year and month == now.month:
@@ -182,17 +181,17 @@ def download_nyiso_data(start_year = 1999, destination_folder = "00_Raw_Data", p
                         zip_ref.extractall(file[0:-4])
                     # Removing '.zip' file
                     if file.endswith(".zip"):
-                        os.remove(file)                    
+                        os.remove(file)
                 else:
-                    continue          
-                
+                    continue
+
     # Print info statement when all files have been downloaded
     if print_info:
         print(f"Actual load '.zip' file download completed up to {now.month}/{now.day-1}/{now.year}")
-    
+
     # ORGANIZING ACTUAL LOAD DATA PER ZONE
     organizing_actual_load_data_per_zone(raw_actual_load_path, processed_actual_load_path)
-    
+
     if print_info:
         print(f"Actual load '.zip' file organization completed up to {now.month}/{now.day-1}/{now.year}")
 
@@ -207,8 +206,8 @@ def organizing_actual_load_data_per_zone(raw_data_path, write_data_path):
     for year_subfolder in year_subfolders:
 
         year_subfolder_path = os.path.join(raw_data_path, year_subfolder)
-        
-        # Path of the subfolder files containing the 'csv' files for each year   
+
+        # Path of the subfolder files containing the 'csv' files for each year
         csv_subfolders = [os.path.join(year_subfolder_path, csv_subf) for csv_subf in os.listdir(year_subfolder_path)]
 
         for csv_subf in csv_subfolders:
@@ -232,7 +231,7 @@ def organizing_actual_load_data_per_zone(raw_data_path, write_data_path):
                 for zone in zones_nys_ps:
                     # Name of the target file
                     filename = csv_files_names[n_csv_file][:-17] + "_" + zone
-                    
+
                     # Path of the target folder
                     target_path_csv = os.path.join(os.path.join(os.path.join(write_data_path, year_subfolder), zone), "csv")
                     target_path_pkl = os.path.join(os.path.join(os.path.join(write_data_path, year_subfolder), zone), "pkl")
@@ -242,9 +241,9 @@ def organizing_actual_load_data_per_zone(raw_data_path, write_data_path):
                         os.makedirs(target_path_csv)
                     if not os.path.exists(target_path_pkl):
                         os.makedirs(target_path_pkl)
-                
+
                     save_file_path = os.path.join(target_path_pkl, filename) + ".pkl"
-                    
+
                     # Skip operations if the file already exists
                     if os.path.exists(save_file_path):
                         continue
@@ -268,7 +267,7 @@ def organizing_actual_load_data_per_zone(raw_data_path, write_data_path):
                     for date in df_temp["Time Stamp"]:
                         date_aux_1 = datetime.datetime.strptime(date, '%m/%d/%Y %H:%M:%S')
                         time_values.append(date_aux_1)
-                
+
                     df_temp.drop("Time Stamp", axis = 1, inplace = True)
                     df_temp["Time Stamp"] = time_values
 
@@ -286,16 +285,16 @@ def organizing_actual_load_data_per_zone(raw_data_path, write_data_path):
                 filename = csv_files_names[n_csv_file][:-17] + "_" + "NYISO"
                 target_path_pkl = os.path.join(os.path.join(os.path.join(write_data_path, year_subfolder), "NYISO"), "pkl")
                 target_path_csv = os.path.join(os.path.join(os.path.join(write_data_path, year_subfolder), "NYISO"), "csv")
-                
+
                 # Creating target folder for '.pkl' files if it does not exist yet
                 if not os.path.exists(target_path_pkl):
                     os.makedirs(target_path_pkl)
                 # Creating target folder for '.csv' files if it does not exist yet
                 if not os.path.exists(target_path_csv):
                     os.makedirs(target_path_csv)
-            
+
                 save_file_path = os.path.join(target_path_pkl, filename) + ".pkl"
-                
+
                 # Skip operations if the file already exists
                 if os.path.exists(save_file_path):
                     continue
@@ -322,16 +321,16 @@ def organizing_actual_load_data_per_zone(raw_data_path, write_data_path):
                 for date in df_temp["Time Stamp"]:
                     date_aux_1 = datetime.datetime.strptime(date, '%m/%d/%Y %H:%M:%S')
                     time_values.append(date_aux_1)
-            
+
                 df_temp.drop("Time Stamp", axis = 1, inplace = True)
                 df_temp["Time Stamp"] = time_values
 
                 with open(save_file_path, 'wb') as f:
                     pickle.dump(df_temp, f, pickle.HIGHEST_PROTOCOL)
 
-                # Saving dataframe as '.csv' file   
+                # Saving dataframe as '.csv' file
                 df_temp.to_csv(os.path.join(target_path_csv, filename) + ".csv", index = False)
-                
+
                 if df_temp is not None:
                     df_temp = None
 
@@ -348,8 +347,8 @@ def organizing_forecast_data_per_zone(raw_data_path, write_data_path):
     for year_subfolder in year_subfolders:
 
         year_subfolder_path = os.path.join(raw_data_path, year_subfolder)
-        
-        # Path of the subfolder files containing the 'csv' files for each year   
+
+        # Path of the subfolder files containing the 'csv' files for each year
         csv_subfolders = [os.path.join(year_subfolder_path, csv_subf) for csv_subf in os.listdir(year_subfolder_path)]
 
         for csv_subf in csv_subfolders:
@@ -377,7 +376,7 @@ def organizing_forecast_data_per_zone(raw_data_path, write_data_path):
 
                     # Name of the target file
                     filename = csv_files_names[n_csv_file][:-9] + "_" + zone.upper()
-                    
+
                     # Path of the target folder
                     target_path_csv = os.path.join(os.path.join(os.path.join(write_data_path, year_subfolder), zone.upper()), "csv")
                     target_path_pkl = os.path.join(os.path.join(os.path.join(write_data_path, year_subfolder), zone.upper()), "pkl")
@@ -388,9 +387,9 @@ def organizing_forecast_data_per_zone(raw_data_path, write_data_path):
 
                     if not os.path.exists(target_path_pkl):
                         os.makedirs(target_path_pkl)
-                
+
                     save_file_path = os.path.join(target_path_pkl, filename) + ".pkl"
-                    
+
                     # Skip operations if the file already exists
                     if os.path.exists(save_file_path):
                         continue
@@ -411,7 +410,7 @@ def organizing_forecast_data_per_zone(raw_data_path, write_data_path):
                     for date in df_temp["Time Stamp"]:
                         date_aux_1 = datetime.datetime.strptime(date, '%m/%d/%Y %H:%M')
                         time_values.append(date_aux_1)
-                
+
                     df_temp.drop("Time Stamp", axis = 1, inplace = True)
                     df_temp["Time Stamp"] = time_values
 
